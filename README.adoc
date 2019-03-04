@@ -57,6 +57,11 @@ The structure of a how-to must be as follows.
 
 - Briefly recapitulate what was covered and learned in the how-to.
 
+== See also
+
+- If possible, link to other how-tos.
+- If judicious, link to Vert.x or third-party documentation.
+
 == How is the website being rendered?
 
 The website is being rendered using Jekyll and the Asciidoctor extension for Jekyll.
