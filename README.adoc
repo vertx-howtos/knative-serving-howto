@@ -20,6 +20,19 @@ This how-to shows you how to deploy a Vert.x-based _function_ served by https://
 - Docker
 - A working Kubernetes cluster with https://github.com/knative/serving[Knative/serving].
 
+== What is a Knative function and why is Vert.x a good match?
+
+Knative starts container images (3 by default) to respond to requests, and scales down to 0 after some delay without traffic.
+A "function" served by Knative/serving is simply a HTTP service written in any language, and packaged as a container image.
+
+Vert.x is ideal for writing Knative functions on the JVM, because:
+
+. Vert.x applications start very fast since there is no magic happening at run time,
+. GraalVM can be used compilation to further reduce the startup and memory footprint (out of the scope of this how-to),
+. Vert.x applications are resource-efficient and remain responsive even under heavy load,
+. Vert.x offers a large ecosystem of reactive clients to other middlewares (databases, messaging, etc),
+. even a _main_ method suffices to bootstrap a Vert.x application!
+
 == Create a project
 
 The code of this project contains Maven and Gradle build files that are functionally equivalent.
@@ -47,19 +60,6 @@ include::pom.xml[]
 <1> We need Kotlin, `vertx-web` and `asciidoctorj`.
 <2> Allows running with `mvn exec:java`.
 <3> Jib configuration to produce an image.
-
-== What is a Knative function and why is Vert.x a good match?
-
-Knative starts container images (3 by default) to respond to requests, and scales down to 0 after some delay without traffic.
-A "function" served by Knative/serving is simply a HTTP service written in any language, and packaged as a container image.
-
-Vert.x is ideal for writing Knative functions on the JVM, because:
-
-. Vert.x applications start very fast since there is no magic happening at run time,
-. GraalVM can be used compilation to further reduce the startup and memory footprint (out of the scope of this how-to),
-. Vert.x applications are resource-efficient and remain responsive even under heavy load,
-. Vert.x offers a large ecosystem of reactive clients to other middlewares (databases, messaging, etc),
-. even a _main_ method suffices to bootstrap a Vert.x application!
 
 == Writing the function
 
