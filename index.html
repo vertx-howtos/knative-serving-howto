@@ -93,6 +93,37 @@
 </div>
 </div>
 <div class="sect1">
+<h2 id="what-is-a-knative-function-and-why-is-vert-x-a-good-match">What is a Knative function and why is Vert.x a good match?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Knative starts container images (3 by default) to respond to requests, and scales down to 0 after some delay without traffic.
+A "function" served by Knative/serving is simply a HTTP service written in any language, and packaged as a container image.</p>
+</div>
+<div class="paragraph">
+<p>Vert.x is ideal for writing Knative functions on the JVM, because:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Vert.x applications start very fast since there is no magic happening at run time,</p>
+</li>
+<li>
+<p>GraalVM can be used compilation to further reduce the startup and memory footprint (out of the scope of this how-to),</p>
+</li>
+<li>
+<p>Vert.x applications are resource-efficient and remain responsive even under heavy load,</p>
+</li>
+<li>
+<p>Vert.x offers a large ecosystem of reactive clients to other middlewares (databases, messaging, etc),</p>
+</li>
+<li>
+<p>even a <em>main</em> method suffices to bootstrap a Vert.x application!</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="create-a-project">Create a project</h2>
 <div class="sectionbody">
 <div class="paragraph">
@@ -280,37 +311,6 @@
 </li>
 </ol>
 </div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="what-is-a-knative-function-and-why-is-vert-x-a-good-match">What is a Knative function and why is Vert.x a good match?</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Knative starts container images (3 by default) to respond to requests, and scales down to 0 after some delay without traffic.
-A "function" served by Knative/serving is simply a HTTP service written in any language, and packaged as a container image.</p>
-</div>
-<div class="paragraph">
-<p>Vert.x is ideal for writing Knative functions on the JVM, because:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Vert.x applications start very fast since there is no magic happening at run time,</p>
-</li>
-<li>
-<p>GraalVM can be used compilation to further reduce the startup and memory footprint (out of the scope of this how-to),</p>
-</li>
-<li>
-<p>Vert.x applications are resource-efficient and remain responsive even under heavy load,</p>
-</li>
-<li>
-<p>Vert.x offers a large ecosystem of reactive clients to other middlewares (databases, messaging, etc),</p>
-</li>
-<li>
-<p>even a <em>main</em> method suffices to bootstrap a Vert.x application!</p>
-</li>
-</ol>
 </div>
 </div>
 </div>
@@ -573,7 +573,7 @@ No resources found.</pre>
     <div class="row">
       <div class="col">
         <hr>
-        <p><small>Last published: 2019-03-05 15:34:32 +0000.</small></p>
+        <p><small>Last published: 2019-03-05 15:39:03 +0000.</small></p>
       </div>
     </div>
   </div>
