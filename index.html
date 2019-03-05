@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Deploying a Vert.x function with Knative | Eclipse Vert.x how-to</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr"
+    crossorigin="anonymous">
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg sticky-top navbar-dark bg-purple mb-4 shadow-sm">
+    <a class="navbar-brand" href="#">
+      <img src="assets/images/vertx-square.svg" alt="Vert.x" width="40" height="40">
+      &nbsp; Eclipse Vert.x how-to
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav"
+      aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="https://vertx.io/docs/"><i class="fas fa-lg fa-drafting-compass"></i> Vert.x docs</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/vertx-howtos/knative-serving-howto"><i class="fab fa-lg fa-github"></i> Source
+            code</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/vertx-howtos/knative-serving-howto/edit/master/README.adoc"><i class="far fa-lg fa-edit"></i>
+            Edit this</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+  <div class="container">
+    <div class="row">
+      <div class="col">
+        <h1>Deploying a Vert.x function with Knative</h1>
+        <div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>This how-to shows you how to deploy a Vert.x-based <em>function</em> served by <a href="https://cloud.google.com/knative/">Knative</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="what-you-will-build">What you will build</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>You will write a function that accepts Asciidoc text, and produces a HTML rendering with Asciidoctor.</p>
+</li>
+<li>
+<p>This function will be written in Kotlin.</p>
+</li>
+<li>
+<p>A container image with the function will be created with <a href="https://github.com/GoogleContainerTools/jib">Jib</a>.</p>
+</li>
+<li>
+<p>This function will be deployed with Knative/serving.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="what-you-need">What you need</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>A text editor or IDE</p>
+</li>
+<li>
+<p>Java 8 higher</p>
+</li>
+<li>
+<p>Maven or Gradle</p>
+</li>
+<li>
+<p>Docker</p>
+</li>
+<li>
+<p>A working Kubernetes cluster with <a href="https://github.com/knative/serving">Knative/serving</a>.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="create-a-project">Create a project</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The code of this project contains Maven and Gradle build files that are functionally equivalent.</p>
+</div>
+<div class="sect2">
+<h3 id="with-gradle">With Gradle</h3>
+<div class="paragraph">
+<p>Here is the content of the <code>build.gradle.kts</code> file that you should be using:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin"><span id="L1" class="line"><span style="color: #000000;font-weight: bold">import</span> <span style="color: #555555">org.jetbrains.kotlin.gradle.tasks.KotlinCompile</span></span>
+<span id="L2" class="line"></span>
+<span id="L3" class="line"><span style="background-color: #f8f8f8">plugins</span> <span style="background-color: #f8f8f8">{</span></span>
+<span id="L4" class="line">  <span style="background-color: #f8f8f8">id</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"org.jetbrains.kotlin.jvm"</span><span style="background-color: #f8f8f8">).</span><span style="background-color: #f8f8f8">version</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"1.3.20"</span><span style="background-color: #f8f8f8">)</span></span>
+<span id="L5" class="line">  <span style="background-color: #f8f8f8">id</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"com.google.cloud.tools.jib"</span><span style="background-color: #f8f8f8">)</span> <span style="background-color: #f8f8f8">version</span> <span style="color: #d14">"1.0.1"</span></span>
+<span id="L6" class="line">  <span style="background-color: #f8f8f8">application</span></span>
+<span id="L7" class="line"><span style="background-color: #f8f8f8">}</span></span>
+<span id="L8" class="line"></span>
+<span id="L9" class="line"><span style="background-color: #f8f8f8">repositories</span> <span style="background-color: #f8f8f8">{</span></span>
+<span id="L10" class="line">  <span style="background-color: #f8f8f8">jcenter</span><span style="background-color: #f8f8f8">()</span></span>
+<span id="L11" class="line"><span style="background-color: #f8f8f8">}</span></span>
+<span id="L12" class="line"></span>
+<span id="L13" class="line"><span style="background-color: #f8f8f8">dependencies</span> <span style="background-color: #f8f8f8">{</span>  <b class="conum">(1)</b></span>
+<span id="L14" class="line">  <span style="background-color: #f8f8f8">implementation</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"org.jetbrains.kotlin:kotlin-stdlib-jdk8"</span><span style="background-color: #f8f8f8">)</span></span>
+<span id="L15" class="line">  <span style="background-color: #f8f8f8">implementation</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"io.vertx:vertx-web:3.6.3"</span><span style="background-color: #f8f8f8">)</span></span>
+<span id="L16" class="line">  <span style="background-color: #f8f8f8">implementation</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"org.asciidoctor:asciidoctorj:1.5.6"</span><span style="background-color: #f8f8f8">)</span></span>
+<span id="L17" class="line"><span style="background-color: #f8f8f8">}</span></span>
+<span id="L18" class="line"></span>
+<span id="L19" class="line"><span style="background-color: #f8f8f8">application</span> <span style="background-color: #f8f8f8">{</span>  <b class="conum">(2)</b></span>
+<span id="L20" class="line">  <span style="background-color: #f8f8f8">mainClassName</span> <span style="background-color: #f8f8f8">=</span> <span style="color: #d14">"io.vertx.howtos.knative.serving.AppKt"</span></span>
+<span id="L21" class="line"><span style="background-color: #f8f8f8">}</span></span>
+<span id="L22" class="line"></span>
+<span id="L23" class="line"><span style="background-color: #f8f8f8">tasks</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">withType</span><span style="background-color: #f8f8f8">&lt;</span><span style="background-color: #f8f8f8">KotlinCompile</span><span style="background-color: #f8f8f8">&gt;</span> <span style="background-color: #f8f8f8">{</span></span>
+<span id="L24" class="line">  <span style="background-color: #f8f8f8">kotlinOptions</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">jvmTarget</span> <span style="background-color: #f8f8f8">=</span> <span style="color: #d14">"1.8"</span></span>
+<span id="L25" class="line"><span style="background-color: #f8f8f8">}</span></span>
+<span id="L26" class="line"></span>
+<span id="L27" class="line"><span style="background-color: #f8f8f8">jib</span> <span style="background-color: #f8f8f8">{</span>  <b class="conum">(3)</b></span>
+<span id="L28" class="line">  <span style="background-color: #f8f8f8">to</span> <span style="background-color: #f8f8f8">{</span></span>
+<span id="L29" class="line">    <span style="background-color: #f8f8f8">image</span> <span style="background-color: #f8f8f8">=</span> <span style="color: #d14">"dev.local/jponge/knative-vertx-asciidoctor"</span></span>
+<span id="L30" class="line">    <span style="background-color: #f8f8f8">tags</span> <span style="background-color: #f8f8f8">=</span> <span style="background-color: #f8f8f8">setOf</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"v1"</span><span style="background-color: #f8f8f8">)</span></span>
+<span id="L31" class="line">  <span style="background-color: #f8f8f8">}</span></span>
+<span id="L32" class="line">  <span style="background-color: #f8f8f8">container</span> <span style="background-color: #f8f8f8">{</span></span>
+<span id="L33" class="line">    <span style="background-color: #f8f8f8">mainClass</span> <span style="background-color: #f8f8f8">=</span> <span style="background-color: #f8f8f8">application</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">mainClassName</span></span>
+<span id="L34" class="line">    <span style="background-color: #f8f8f8">ports</span> <span style="background-color: #f8f8f8">=</span> <span style="background-color: #f8f8f8">listOf</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"8080"</span><span style="background-color: #f8f8f8">)</span></span>
+<span id="L35" class="line">  <span style="background-color: #f8f8f8">}</span></span>
+<span id="L36" class="line"><span style="background-color: #f8f8f8">}</span></span>
+<span id="L37" class="line"></span>
+<span id="L38" class="line"><span style="background-color: #f8f8f8">tasks</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">wrapper</span> <span style="background-color: #f8f8f8">{</span></span>
+<span id="L39" class="line">  <span style="background-color: #f8f8f8">gradleVersion</span> <span style="background-color: #f8f8f8">=</span> <span style="color: #d14">"5.2.1"</span></span>
+<span id="L40" class="line"><span style="background-color: #f8f8f8">}</span></span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>We need Kotlin, <code>vertx-web</code> and <code>asciidoctorj</code>.</p>
+</li>
+<li>
+<p>The Gradle application plugin allows us to run the application locally with the <code>run</code> command.</p>
+</li>
+<li>
+<p>Jib configuration to produce an image.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="with-maven">With Maven</h3>
+<div class="paragraph">
+<p>Here is the content of the <code>pom.xml</code> file that you should be using:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-xml" data-lang="xml"><span id="L1" class="line"><span style="color: #999999;font-weight: bold">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span></span>
+<span id="L2" class="line"><span style="color: #000080">&lt;project</span></span>
+<span id="L3" class="line">  <span style="color: #008080">xsi:schemaLocation=</span><span style="color: #d14">"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"</span></span>
+<span id="L4" class="line">  <span style="color: #008080">xmlns=</span><span style="color: #d14">"http://maven.apache.org/POM/4.0.0"</span> <span style="color: #008080">xmlns:xsi=</span><span style="color: #d14">"http://www.w3.org/2001/XMLSchema-instance"</span><span style="color: #000080">&gt;</span></span>
+<span id="L5" class="line"></span>
+<span id="L6" class="line">  <span style="color: #000080">&lt;modelVersion&gt;</span>4.0.0<span style="color: #000080">&lt;/modelVersion&gt;</span></span>
+<span id="L7" class="line"></span>
+<span id="L8" class="line">  <span style="color: #000080">&lt;groupId&gt;</span>io.vertx.howtos<span style="color: #000080">&lt;/groupId&gt;</span></span>
+<span id="L9" class="line">  <span style="color: #000080">&lt;artifactId&gt;</span>knative-serving-howto<span style="color: #000080">&lt;/artifactId&gt;</span></span>
+<span id="L10" class="line">  <span style="color: #000080">&lt;version&gt;</span>1.0-SNAPSHOT<span style="color: #000080">&lt;/version&gt;</span></span>
+<span id="L11" class="line"></span>
+<span id="L12" class="line">  <span style="color: #000080">&lt;properties&gt;</span></span>
+<span id="L13" class="line">    <span style="color: #000080">&lt;kotlin.version&gt;</span>1.3.20<span style="color: #000080">&lt;/kotlin.version&gt;</span></span>
+<span id="L14" class="line">    <span style="color: #000080">&lt;kotlin.compiler.jvmTarget&gt;</span>1.8<span style="color: #000080">&lt;/kotlin.compiler.jvmTarget&gt;</span></span>
+<span id="L15" class="line">    <span style="color: #000080">&lt;main.class&gt;</span>io.vertx.howtos.knative.serving.AppKt<span style="color: #000080">&lt;/main.class&gt;</span></span>
+<span id="L16" class="line">    <span style="color: #000080">&lt;project.build.sourceEncoding&gt;</span>UTF-8<span style="color: #000080">&lt;/project.build.sourceEncoding&gt;</span></span>
+<span id="L17" class="line">  <span style="color: #000080">&lt;/properties&gt;</span></span>
+<span id="L18" class="line"></span>
+<span id="L19" class="line">  <span style="color: #000080">&lt;dependencies&gt;</span>  <b class="conum">(1)</b></span>
+<span id="L20" class="line">    <span style="color: #000080">&lt;dependency&gt;</span></span>
+<span id="L21" class="line">      <span style="color: #000080">&lt;groupId&gt;</span>org.jetbrains.kotlin<span style="color: #000080">&lt;/groupId&gt;</span></span>
+<span id="L22" class="line">      <span style="color: #000080">&lt;artifactId&gt;</span>kotlin-stdlib<span style="color: #000080">&lt;/artifactId&gt;</span></span>
+<span id="L23" class="line">      <span style="color: #000080">&lt;version&gt;</span>${kotlin.version}<span style="color: #000080">&lt;/version&gt;</span></span>
+<span id="L24" class="line">    <span style="color: #000080">&lt;/dependency&gt;</span></span>
+<span id="L25" class="line">    <span style="color: #000080">&lt;dependency&gt;</span></span>
+<span id="L26" class="line">      <span style="color: #000080">&lt;groupId&gt;</span>io.vertx<span style="color: #000080">&lt;/groupId&gt;</span></span>
+<span id="L27" class="line">      <span style="color: #000080">&lt;artifactId&gt;</span>vertx-web<span style="color: #000080">&lt;/artifactId&gt;</span></span>
+<span id="L28" class="line">      <span style="color: #000080">&lt;version&gt;</span>3.6.3<span style="color: #000080">&lt;/version&gt;</span></span>
+<span id="L29" class="line">    <span style="color: #000080">&lt;/dependency&gt;</span></span>
+<span id="L30" class="line">    <span style="color: #000080">&lt;dependency&gt;</span></span>
+<span id="L31" class="line">      <span style="color: #000080">&lt;groupId&gt;</span>org.asciidoctor<span style="color: #000080">&lt;/groupId&gt;</span></span>
+<span id="L32" class="line">      <span style="color: #000080">&lt;artifactId&gt;</span>asciidoctorj<span style="color: #000080">&lt;/artifactId&gt;</span></span>
+<span id="L33" class="line">      <span style="color: #000080">&lt;version&gt;</span>1.5.6<span style="color: #000080">&lt;/version&gt;</span></span>
+<span id="L34" class="line">    <span style="color: #000080">&lt;/dependency&gt;</span></span>
+<span id="L35" class="line">  <span style="color: #000080">&lt;/dependencies&gt;</span></span>
+<span id="L36" class="line"></span>
+<span id="L37" class="line">  <span style="color: #000080">&lt;build&gt;</span></span>
+<span id="L38" class="line">    <span style="color: #000080">&lt;sourceDirectory&gt;</span>${project.basedir}/src/main/kotlin<span style="color: #000080">&lt;/sourceDirectory&gt;</span></span>
+<span id="L39" class="line">    <span style="color: #000080">&lt;plugins&gt;</span></span>
+<span id="L40" class="line">      <span style="color: #000080">&lt;plugin&gt;</span></span>
+<span id="L41" class="line">        <span style="color: #000080">&lt;artifactId&gt;</span>kotlin-maven-plugin<span style="color: #000080">&lt;/artifactId&gt;</span></span>
+<span id="L42" class="line">        <span style="color: #000080">&lt;groupId&gt;</span>org.jetbrains.kotlin<span style="color: #000080">&lt;/groupId&gt;</span></span>
+<span id="L43" class="line">        <span style="color: #000080">&lt;version&gt;</span>${kotlin.version}<span style="color: #000080">&lt;/version&gt;</span></span>
+<span id="L44" class="line">        <span style="color: #000080">&lt;executions&gt;</span></span>
+<span id="L45" class="line">          <span style="color: #000080">&lt;execution&gt;</span></span>
+<span id="L46" class="line">            <span style="color: #000080">&lt;id&gt;</span>compile<span style="color: #000080">&lt;/id&gt;</span></span>
+<span id="L47" class="line">            <span style="color: #000080">&lt;phase&gt;</span>compile<span style="color: #000080">&lt;/phase&gt;</span></span>
+<span id="L48" class="line">            <span style="color: #000080">&lt;goals&gt;</span></span>
+<span id="L49" class="line">              <span style="color: #000080">&lt;goal&gt;</span>compile<span style="color: #000080">&lt;/goal&gt;</span></span>
+<span id="L50" class="line">            <span style="color: #000080">&lt;/goals&gt;</span></span>
+<span id="L51" class="line">          <span style="color: #000080">&lt;/execution&gt;</span></span>
+<span id="L52" class="line">          <span style="color: #000080">&lt;execution&gt;</span></span>
+<span id="L53" class="line">            <span style="color: #000080">&lt;id&gt;</span>test-compile<span style="color: #000080">&lt;/id&gt;</span></span>
+<span id="L54" class="line">            <span style="color: #000080">&lt;phase&gt;</span>test-compile<span style="color: #000080">&lt;/phase&gt;</span></span>
+<span id="L55" class="line">            <span style="color: #000080">&lt;goals&gt;</span></span>
+<span id="L56" class="line">              <span style="color: #000080">&lt;goal&gt;</span>test-compile<span style="color: #000080">&lt;/goal&gt;</span></span>
+<span id="L57" class="line">            <span style="color: #000080">&lt;/goals&gt;</span></span>
+<span id="L58" class="line">          <span style="color: #000080">&lt;/execution&gt;</span></span>
+<span id="L59" class="line">        <span style="color: #000080">&lt;/executions&gt;</span></span>
+<span id="L60" class="line">      <span style="color: #000080">&lt;/plugin&gt;</span></span>
+<span id="L61" class="line">      <span style="color: #000080">&lt;plugin&gt;</span></span>
+<span id="L62" class="line">        <span style="color: #000080">&lt;groupId&gt;</span>org.codehaus.mojo<span style="color: #000080">&lt;/groupId&gt;</span>  <b class="conum">(2)</b></span>
+<span id="L63" class="line">        <span style="color: #000080">&lt;artifactId&gt;</span>exec-maven-plugin<span style="color: #000080">&lt;/artifactId&gt;</span></span>
+<span id="L64" class="line">        <span style="color: #000080">&lt;version&gt;</span>1.2.1<span style="color: #000080">&lt;/version&gt;</span></span>
+<span id="L65" class="line">        <span style="color: #000080">&lt;executions&gt;</span></span>
+<span id="L66" class="line">          <span style="color: #000080">&lt;execution&gt;</span></span>
+<span id="L67" class="line">            <span style="color: #000080">&lt;goals&gt;</span></span>
+<span id="L68" class="line">              <span style="color: #000080">&lt;goal&gt;</span>java<span style="color: #000080">&lt;/goal&gt;</span></span>
+<span id="L69" class="line">            <span style="color: #000080">&lt;/goals&gt;</span></span>
+<span id="L70" class="line">          <span style="color: #000080">&lt;/execution&gt;</span></span>
+<span id="L71" class="line">        <span style="color: #000080">&lt;/executions&gt;</span></span>
+<span id="L72" class="line">        <span style="color: #000080">&lt;configuration&gt;</span></span>
+<span id="L73" class="line">          <span style="color: #000080">&lt;mainClass&gt;</span>${main.class}<span style="color: #000080">&lt;/mainClass&gt;</span></span>
+<span id="L74" class="line">        <span style="color: #000080">&lt;/configuration&gt;</span></span>
+<span id="L75" class="line">      <span style="color: #000080">&lt;/plugin&gt;</span></span>
+<span id="L76" class="line">      <span style="color: #000080">&lt;plugin&gt;</span></span>
+<span id="L77" class="line">        <span style="color: #000080">&lt;groupId&gt;</span>com.google.cloud.tools<span style="color: #000080">&lt;/groupId&gt;</span> <b class="conum">(3)</b></span>
+<span id="L78" class="line">        <span style="color: #000080">&lt;artifactId&gt;</span>jib-maven-plugin<span style="color: #000080">&lt;/artifactId&gt;</span></span>
+<span id="L79" class="line">        <span style="color: #000080">&lt;version&gt;</span>1.0.1<span style="color: #000080">&lt;/version&gt;</span></span>
+<span id="L80" class="line">        <span style="color: #000080">&lt;configuration&gt;</span></span>
+<span id="L81" class="line">          <span style="color: #000080">&lt;to&gt;</span></span>
+<span id="L82" class="line">            <span style="color: #000080">&lt;image&gt;</span>dev.local/jponge/knative-vertx-asciidoctor<span style="color: #000080">&lt;/image&gt;</span></span>
+<span id="L83" class="line">            <span style="color: #000080">&lt;tags&gt;</span></span>
+<span id="L84" class="line">              <span style="color: #000080">&lt;tag&gt;</span>v1<span style="color: #000080">&lt;/tag&gt;</span></span>
+<span id="L85" class="line">            <span style="color: #000080">&lt;/tags&gt;</span></span>
+<span id="L86" class="line">          <span style="color: #000080">&lt;/to&gt;</span></span>
+<span id="L87" class="line">          <span style="color: #000080">&lt;container&gt;</span></span>
+<span id="L88" class="line">            <span style="color: #000080">&lt;mainClass&gt;</span>${main.class}<span style="color: #000080">&lt;/mainClass&gt;</span></span>
+<span id="L89" class="line">            <span style="color: #000080">&lt;ports&gt;</span></span>
+<span id="L90" class="line">              <span style="color: #000080">&lt;port&gt;</span>8080<span style="color: #000080">&lt;/port&gt;</span></span>
+<span id="L91" class="line">            <span style="color: #000080">&lt;/ports&gt;</span></span>
+<span id="L92" class="line">          <span style="color: #000080">&lt;/container&gt;</span></span>
+<span id="L93" class="line">        <span style="color: #000080">&lt;/configuration&gt;</span></span>
+<span id="L94" class="line">      <span style="color: #000080">&lt;/plugin&gt;</span></span>
+<span id="L95" class="line">    <span style="color: #000080">&lt;/plugins&gt;</span></span>
+<span id="L96" class="line">  <span style="color: #000080">&lt;/build&gt;</span></span>
+<span id="L97" class="line"><span style="color: #000080">&lt;/project&gt;</span></span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>We need Kotlin, <code>vertx-web</code> and <code>asciidoctorj</code>.</p>
+</li>
+<li>
+<p>Allows running with <code>mvn exec:java</code>.</p>
+</li>
+<li>
+<p>Jib configuration to produce an image.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="what-is-a-knative-function-and-why-is-vert-x-a-good-match">What is a Knative function and why is Vert.x a good match?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Knative starts container images (3 by default) to respond to requests, and scales down to 0 after some delay without traffic.
+A "function" served by Knative/serving is simply a HTTP service written in any language, and packaged as a container image.</p>
+</div>
+<div class="paragraph">
+<p>Vert.x is ideal for writing Knative functions on the JVM, because:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Vert.x applications start very fast since there is no magic happening at run time,</p>
+</li>
+<li>
+<p>GraalVM can be used compilation to further reduce the startup and memory footprint (out of the scope of this how-to),</p>
+</li>
+<li>
+<p>Vert.x applications are resource-efficient and remain responsive even under heavy load,</p>
+</li>
+<li>
+<p>Vert.x offers a large ecosystem of reactive clients to other middlewares (databases, messaging, etc),</p>
+</li>
+<li>
+<p>even a <em>main</em> method suffices to bootstrap a Vert.x application!</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="writing-the-function">Writing the function</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The function exposes a HTTP server.
+Asciidoc is passed to the function through HTTP POST requests.
+For each request, Asciidoctor is used to perform the conversion to HTML:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-kotlin" data-lang="kotlin"><span id="L1" class="line"><span style="color: #000000;font-weight: bold">package</span> <span style="color: #555555">io.vertx.howtos.knative.serving</span></span>
+<span id="L2" class="line"></span>
+<span id="L3" class="line"><span style="color: #000000;font-weight: bold">import</span> <span style="color: #555555">io.vertx.core.Vertx</span></span>
+<span id="L4" class="line"><span style="color: #000000;font-weight: bold">import</span> <span style="color: #555555">io.vertx.ext.web.Router</span></span>
+<span id="L5" class="line"><span style="color: #000000;font-weight: bold">import</span> <span style="color: #555555">io.vertx.ext.web.handler.BodyHandler</span></span>
+<span id="L6" class="line"><span style="color: #000000;font-weight: bold">import</span> <span style="color: #555555">org.asciidoctor.Asciidoctor</span></span>
+<span id="L7" class="line"><span style="color: #000000;font-weight: bold">import</span> <span style="color: #555555">org.asciidoctor.OptionsBuilder</span></span>
+<span id="L8" class="line"><span style="color: #000000;font-weight: bold">import</span> <span style="color: #555555">org.asciidoctor.SafeMode</span></span>
+<span id="L9" class="line"></span>
+<span id="L10" class="line"><span style="color: #000000;font-weight: bold">fun</span> <span style="color: #990000;font-weight: bold">main</span><span style="background-color: #f8f8f8">()</span> <span style="background-color: #f8f8f8">{</span></span>
+<span id="L11" class="line">  <span style="color: #000000;font-weight: bold">val</span> <span style="background-color: #f8f8f8">vertx</span> <span style="background-color: #f8f8f8">=</span> <span style="background-color: #f8f8f8">Vertx</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">vertx</span><span style="background-color: #f8f8f8">()</span> <b class="conum">(1)</b></span>
+<span id="L12" class="line"></span>
+<span id="L13" class="line">  <span style="color: #000000;font-weight: bold">val</span> <span style="background-color: #f8f8f8">asciidoctor</span> <span style="background-color: #f8f8f8">=</span> <span style="background-color: #f8f8f8">Asciidoctor</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">Factory</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">create</span><span style="background-color: #f8f8f8">()</span>  <b class="conum">(2)</b></span>
+<span id="L14" class="line">  <span style="color: #000000;font-weight: bold">val</span> <span style="background-color: #f8f8f8">options</span> <span style="background-color: #f8f8f8">=</span> <span style="background-color: #f8f8f8">OptionsBuilder</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">options</span><span style="background-color: #f8f8f8">()</span></span>
+<span id="L15" class="line">    <span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">safe</span><span style="background-color: #f8f8f8">(</span><span style="background-color: #f8f8f8">SafeMode</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">SAFE</span><span style="background-color: #f8f8f8">)</span></span>
+<span id="L16" class="line">    <span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">backend</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"html5"</span><span style="background-color: #f8f8f8">)</span></span>
+<span id="L17" class="line">    <span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">headerFooter</span><span style="background-color: #f8f8f8">(</span><span style="color: #000000;font-weight: bold">true</span><span style="background-color: #f8f8f8">)</span></span>
+<span id="L18" class="line"></span>
+<span id="L19" class="line">  <span style="color: #000000;font-weight: bold">val</span> <span style="background-color: #f8f8f8">router</span> <span style="background-color: #f8f8f8">=</span> <span style="background-color: #f8f8f8">Router</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">router</span><span style="background-color: #f8f8f8">(</span><span style="background-color: #f8f8f8">vertx</span><span style="background-color: #f8f8f8">)</span></span>
+<span id="L20" class="line">  <span style="background-color: #f8f8f8">router</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">route</span><span style="background-color: #f8f8f8">().</span><span style="background-color: #f8f8f8">handler</span><span style="background-color: #f8f8f8">(</span><span style="background-color: #f8f8f8">BodyHandler</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">create</span><span style="background-color: #f8f8f8">())</span>  <b class="conum">(3)</b></span>
+<span id="L21" class="line"></span>
+<span id="L22" class="line">  <span style="background-color: #f8f8f8">router</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">post</span><span style="background-color: #f8f8f8">().</span><span style="background-color: #f8f8f8">handler</span> <span style="background-color: #f8f8f8">{</span> <span style="background-color: #f8f8f8">ctx</span> <span style="background-color: #f8f8f8">-&gt;</span>  <b class="conum">(4)</b></span>
+<span id="L23" class="line">    <span style="background-color: #f8f8f8">ctx</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">response</span><span style="background-color: #f8f8f8">()</span></span>
+<span id="L24" class="line">      <span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">putHeader</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"Content-Type"</span><span style="background-color: #f8f8f8">,</span> <span style="color: #d14">"text/html"</span><span style="background-color: #f8f8f8">)</span></span>
+<span id="L25" class="line">      <span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">end</span><span style="background-color: #f8f8f8">(</span><span style="background-color: #f8f8f8">asciidoctor</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">render</span><span style="background-color: #f8f8f8">(</span><span style="background-color: #f8f8f8">ctx</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">bodyAsString</span><span style="background-color: #f8f8f8">,</span> <span style="background-color: #f8f8f8">options</span><span style="background-color: #f8f8f8">))</span></span>
+<span id="L26" class="line">  <span style="background-color: #f8f8f8">}</span></span>
+<span id="L27" class="line"></span>
+<span id="L28" class="line">  <span style="background-color: #f8f8f8">vertx</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">createHttpServer</span><span style="background-color: #f8f8f8">()</span></span>
+<span id="L29" class="line">    <span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">requestHandler</span><span style="background-color: #f8f8f8">(</span><span style="background-color: #f8f8f8">router</span><span style="background-color: #f8f8f8">)</span></span>
+<span id="L30" class="line">    <span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">listen</span><span style="background-color: #f8f8f8">(</span><span style="color: #009999">8080</span><span style="background-color: #f8f8f8">)</span></span>
+<span id="L31" class="line"><span style="background-color: #f8f8f8">}</span></span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>We create a Vert.x context.</p>
+</li>
+<li>
+<p>We configure a Asciidoctor render.</p>
+</li>
+<li>
+<p>We install a HTTP request body handler, so we can just process the whole body rather than manually assemble buffers.</p>
+</li>
+<li>
+<p>For each request, we render the HTML from the Asciidoc.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>We could have written the Vert.x code as a verticle, but doing so in the <code>main</code> function reduces the boilerplate code since we would only be deploying a single verticle here anyway.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="running-the-function-locally">Running the function locally</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We can easily test that the function works:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>from your IDE, run the <code>main</code> function, or</p>
+</li>
+<li>
+<p>with Gradle: <code>./gradlew run</code> (Linux, macOS) or <code>gradle run</code> (Windows).</p>
+</li>
+<li>
+<p>with Maven: <code>mvn compile exec:java</code>.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>You can then upload the content of a Asciidoc file, like the <code>README.adoc</code> file at the root of this repository.
+With <a href="https://httpie.org/">HTTPie</a>, you would run a command similar to:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ http POST :8080/ @README.adoc</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="preparing-your-cluster">Preparing your cluster</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You should go to the <a href="https://github.com/knative/docs/blob/master/install/">Knative documentation for installation instructions</a>.</p>
+</div>
+<div class="paragraph">
+<p>The commands in this how-to assume that you have installed <a href="https://github.com/knative/docs/blob/master/install/Knative-with-Minikube.md">Knative with Minikube</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="building-your-container-image">Building your container image</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The Jib plugin in your Gradle or Maven build will automatically assemble a container image with the correct entry point to run the application, and port 8080 being exposed.
+The container image then has to be pushed to your favorite repository.</p>
+</div>
+<div class="paragraph">
+<p>If you are using Minikube, you can directly build and tag the container image:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ eval $(minikube docker-env)
+$ ./gradlew jibDockerBuild    # or mvn package jib:dockerBuild</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Docker should then list the image:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ docker image ls
+REPOSITORY                                    TAG       IMAGE ID
+(...)
+dev.local/jponge/knative-vertx-asciidoctor    latest    4ca7aafd590c
+dev.local/jponge/knative-vertx-asciidoctor    v1        4ca7aafd590c
+(...)</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="describing-a-service-for-knative">Describing a service for Knative</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Here is the descriptor in file <code>service.yaml</code> for exposing our function with Knative/serving:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-yaml" data-lang="yaml"><span id="L1" class="line"><span style="color: #008080">apiVersion</span><span style="background-color: #f8f8f8">:</span> <span style="color: #d14">serving.knative.dev/v1alpha1</span></span>
+<span id="L2" class="line"><span style="color: #008080">kind</span><span style="background-color: #f8f8f8">:</span> <span style="color: #d14">Service</span></span>
+<span id="L3" class="line"><span style="color: #008080">metadata</span><span style="background-color: #f8f8f8">:</span></span>
+<span id="L4" class="line">  <span style="color: #008080">name</span><span style="background-color: #f8f8f8">:</span> <span style="color: #d14">knative-vertx-asciidoctor</span></span>
+<span id="L5" class="line">  <span style="color: #008080">namespace</span><span style="background-color: #f8f8f8">:</span> <span style="color: #d14">default</span></span>
+<span id="L6" class="line"><span style="color: #008080">spec</span><span style="background-color: #f8f8f8">:</span></span>
+<span id="L7" class="line">  <span style="color: #008080">runLatest</span><span style="background-color: #f8f8f8">:</span></span>
+<span id="L8" class="line">    <span style="color: #008080">configuration</span><span style="background-color: #f8f8f8">:</span></span>
+<span id="L9" class="line">      <span style="color: #008080">revisionTemplate</span><span style="background-color: #f8f8f8">:</span></span>
+<span id="L10" class="line">        <span style="color: #008080">spec</span><span style="background-color: #f8f8f8">:</span></span>
+<span id="L11" class="line">          <span style="color: #008080">container</span><span style="background-color: #f8f8f8">:</span></span>
+<span id="L12" class="line">            <span style="color: #008080">image</span><span style="background-color: #f8f8f8">:</span> <span style="color: #d14">dev.local/jponge/knative-vertx-asciidoctor:v1</span></span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We can then apply the configuration and check that the service is available:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ kubectl apply -f service.yaml
+service.serving.knative.dev/knative-vertx-asciidoctor created
+$ kubectl get ksvc
+NAME                        DOMAIN                                          LATESTCREATED                     LATESTREADY                       READY     REASON
+knative-vertx-asciidoctor   knative-vertx-asciidoctor.default.example.com   knative-vertx-asciidoctor-jc4sw   knative-vertx-asciidoctor-pztr6   Unknown</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="testing-the-function-exposed-by-knative">Testing the function exposed by Knative</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In our case the function is exposed under the <code>knative-vertx-asciidoctor.default.example.com</code> domain.
+It is available via the <code>istio-ingressgateway</code> service (check all available services with <code>kubectl get services --all-namespaces</code>).</p>
+</div>
+<div class="paragraph">
+<p>The Knative documentation has <a href="https://github.com/knative/docs/blob/master/install/getting-started-knative-app.md">instructions to figure out what IP, ports and host names you should use</a>.</p>
+</div>
+<div class="paragraph">
+<p>With Minikube, making a request to the function is similar to:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ http POST $(minikube ip):31380 'Host:knative-vertx-asciidoctor.default.example.com' @README.adoc</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You should see HTML in the response.
+You should also see pods for your function:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ kubectl get pods
+NAME                                                          READY   STATUS    RESTARTS   AGE
+knative-vertx-asciidoctor-mlhwq-deployment-5cc999bdb7-jx2ff   3/3     Running   0          2m5s</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>After a while, you can check that the Knative auto-scaler has removed all pods:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ kubectl get pods
+No resources found.</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Issue a new request, and see that new pods have been created again.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="summary">Summary</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>We wrote a function with Vert.x and Kotlin that renders Asciidoc text to HTML.</p>
+</li>
+<li>
+<p>We built a container image.</p>
+</li>
+<li>
+<p>We deployed this function with Knative/serving.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="see-also">See also</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://vertx.io/docs/vertx-web/java/">Vert.x web APIs</a></p>
+</li>
+<li>
+<p><a href="https://kubernetes.io/docs/setup/minikube/">Minikube</a></p>
+</li>
+<li>
+<p><a href="https://github.com/knative/docs">Knative documentation</a></p>
+</li>
+<li>
+<p><a href="https://github.com/knative/serving">Knative serving</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <hr>
+        <p><small>Last published: 2019-03-05 15:34:32 +0000.</small></p>
+      </div>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+    crossorigin="anonymous"></script>
+</body>
+
+</html>
