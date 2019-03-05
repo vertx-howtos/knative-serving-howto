@@ -1,172 +1,186 @@
-= Template and instructions for the Eclipse Vert.x how-tos
+= Deploying a Vert.x function with Knative
 :author: Julien Ponge <julien.ponge@gmail.com>
-:toc:
+:page-permalink: /
+:page-github: vertx-howtos/knative-serving-howto
 
-This repository can be cloned and used as a basis for creating a new Eclipse Vert.x how-to.
-It especially contains the https://jekyllrb.com/[Jekyll] and continuous integration configurations for publishing a how-to as a web page.
+This how-to shows you how to deploy a Vert.x-based _function_ served by https://cloud.google.com/knative/[Knative].
 
-== Conventions
+== What you will build
 
-Each how-to is a self-contained Git repository of the https://github.com/vertx-howtos[corresponding organisation on GitHub].
+- You will write a function that accepts Asciidoc text, and produces a HTML rendering with Asciidoctor.
+- This function will be written in Kotlin.
+- A container image with the function will be created with https://github.com/GoogleContainerTools/jib[Jib].
+- This function will be deployed with Knative/serving.
 
-The how-to document is written using the https://asciidoctor.org/docs/what-is-asciidoc/[Asciidoc] text format in a file called `README.adoc` at the root of the Git repository.
+== What you need
 
-The accompanying source code is directly at the root of the Git repository.
-For instance a Maven `pom.xml` is co-located with `README.adoc` at the root of the repository.
+- A text editor or IDE
+- Java 8 higher
+- Maven or Gradle
+- Docker
+- A working Kubernetes cluster with https://github.com/knative/serving[Knative/serving].
 
-Projects should preferably have both Maven and Gradle build descriptors.
-An author who doesn't have knowledge of either of the tools can always ask for contributions.
+== Create a project
 
-== Structure of a how-to
+The code of this project contains Maven and Gradle build files that are functionally equivalent.
 
-A how-to is not a guide or a mini-book: it must be as concise as possible.
+=== With Gradle
 
-In practice this means that each how-to must focus on a very narrow topic.
-It also means that the text must not deviate from the topic, and that the chose example must be as simple as possible.
+Here is the content of the `build.gradle.kts` file that you should be using:
 
-The structure of a how-to must be as follows.
+[source,kotlin]
+----
+include::build.gradle.kts[]
+----
+<1> We need Kotlin, `vertx-web` and `asciidoctorj`.
+<2> The Gradle application plugin allows us to run the application locally with the `run` command.
+<3> Jib configuration to produce an image.
 
-=== What you will build
+=== With Maven
 
-- Explain the example scenario from a functional point of view.
-- Explain what the user can see when running the example.
-- Highlight the different pieces of code to be written and how they fit together.
+Here is the content of the `pom.xml` file that you should be using:
 
-=== What you need
+[source,xml]
+----
+include::pom.xml[]
+----
+<1> We need Kotlin, `vertx-web` and `asciidoctorj`.
+<2> Allows running with `mvn exec:java`.
+<3> Jib configuration to produce an image.
 
-- List all required tools to edit, build and run the how-to.
-- Do not hesitate to point to third-party resources (e.g., if you need Docker, say why you need it and point to its installation documentation).
+== What is a Knative function and why is Vert.x a good match?
 
-=== Create a project
+Knative starts container images (3 by default) to respond to requests, and scales down to 0 after some delay without traffic.
+A "function" served by Knative/serving is simply a HTTP service written in any language, and packaged as a container image.
 
-- Explain how to create the project.
-- Show the Maven / Gradle build descriptors.
-- For any third-party tool (e.g., running a database with Docker), also have a subsection to explain this.
+Vert.x is ideal for writing Knative functions on the JVM, because:
 
-=== Implementation sections
+. Vert.x applications start very fast since there is no magic happening at run time,
+. GraalVM can be used compilation to further reduce the startup and memory footprint (out of the scope of this how-to),
+. Vert.x applications are resource-efficient and remain responsive even under heavy load,
+. Vert.x offers a large ecosystem of reactive clients to other middlewares (databases, messaging, etc),
+. even a _main_ method suffices to bootstrap a Vert.x application!
 
-- Make one or multiple sections to show the implementation.
-- Make use of Asciidoc source code comments to highlight specific parts of the code.
-- The code must be included using https://asciidoctor.org/docs/asciidoc-syntax-quick-reference/#source-code[Asciidoc directives]. Remember that you can include fragments of code by using delimiter tags.
+== Writing the function
 
-=== Running the application
+The function exposes a HTTP server.
+Asciidoc is passed to the function through HTTP POST requests.
+For each request, Asciidoctor is used to perform the conversion to HTML:
 
-- Always show the various options to run the application.
+[source,kotlin]
+----
+include::src/main/kotlin/io/vertx/howtos/knative/serving/App.kt[]
+----
+<1> We create a Vert.x context.
+<2> We configure a Asciidoctor render.
+<3> We install a HTTP request body handler, so we can just process the whole body rather than manually assemble buffers.
+<4> For each request, we render the HTML from the Asciidoc.
 
-=== Summary
+We could have written the Vert.x code as a verticle, but doing so in the `main` function reduces the boilerplate code since we would only be deploying a single verticle here anyway.
 
-- Briefly recapitulate what was covered and learned in the how-to.
+== Running the function locally
+
+We can easily test that the function works:
+
+. from your IDE, run the `main` function, or
+. with Gradle: `./gradlew run` (Linux, macOS) or `gradle run` (Windows).
+. with Maven: `mvn compile exec:java`.
+
+You can then upload the content of a Asciidoc file, like the `README.adoc` file at the root of this repository.
+With https://httpie.org/[HTTPie], you would run a command similar to:
+
+----
+$ http POST :8080/ @README.adoc
+----
+
+== Preparing your cluster
+
+You should go to the https://github.com/knative/docs/blob/master/install/[Knative documentation for installation instructions].
+
+The commands in this how-to assume that you have installed https://github.com/knative/docs/blob/master/install/Knative-with-Minikube.md[Knative with Minikube].
+
+== Building your container image
+
+The Jib plugin in your Gradle or Maven build will automatically assemble a container image with the correct entry point to run the application, and port 8080 being exposed.
+The container image then has to be pushed to your favorite repository.
+
+If you are using Minikube, you can directly build and tag the container image:
+
+----
+$ eval $(minikube docker-env)
+$ ./gradlew jibDockerBuild    # or mvn package jib:dockerBuild
+----
+
+Docker should then list the image:
+
+----
+$ docker image ls
+REPOSITORY                                    TAG       IMAGE ID
+(...)
+dev.local/jponge/knative-vertx-asciidoctor    latest    4ca7aafd590c
+dev.local/jponge/knative-vertx-asciidoctor    v1        4ca7aafd590c
+(...)
+----
+
+== Describing a service for Knative
+
+Here is the descriptor in file `service.yaml` for exposing our function with Knative/serving:
+
+[source,yaml]
+----
+include::service.yaml[]
+----
+
+We can then apply the configuration and check that the service is available:
+
+----
+$ kubectl apply -f service.yaml
+service.serving.knative.dev/knative-vertx-asciidoctor created
+$ kubectl get ksvc
+NAME                        DOMAIN                                          LATESTCREATED                     LATESTREADY                       READY     REASON
+knative-vertx-asciidoctor   knative-vertx-asciidoctor.default.example.com   knative-vertx-asciidoctor-jc4sw   knative-vertx-asciidoctor-pztr6   Unknown
+----
+
+== Testing the function exposed by Knative
+
+In our case the function is exposed under the `knative-vertx-asciidoctor.default.example.com` domain.
+It is available via the `istio-ingressgateway` service (check all available services with `kubectl get services --all-namespaces`).
+
+The Knative documentation has https://github.com/knative/docs/blob/master/install/getting-started-knative-app.md[instructions to figure out what IP, ports and host names you should use].
+
+With Minikube, making a request to the function is similar to:
+
+----
+$ http POST $(minikube ip):31380 'Host:knative-vertx-asciidoctor.default.example.com' @README.adoc
+----
+
+You should see HTML in the response.
+You should also see pods for your function:
+
+----
+$ kubectl get pods
+NAME                                                          READY   STATUS    RESTARTS   AGE
+knative-vertx-asciidoctor-mlhwq-deployment-5cc999bdb7-jx2ff   3/3     Running   0          2m5s
+----
+
+After a while, you can check that the Knative auto-scaler has removed all pods:
+
+----
+$ kubectl get pods
+No resources found.
+----
+
+Issue a new request, and see that new pods have been created again.
+
+== Summary
+
+- We wrote a function with Vert.x and Kotlin that renders Asciidoc text to HTML.
+- We built a container image.
+- We deployed this function with Knative/serving.
 
 == See also
 
-- If possible, link to other how-tos.
-- If judicious, link to Vert.x or third-party documentation.
-
-== How is the website being rendered?
-
-The website is being rendered using Jekyll and the Asciidoctor extension for Jekyll.
-
-There is a https://github.com/vertx-howtos/vertx-howtos-jekyll-theme[Jekyll theme] published as a Ruby Gem, so every how-to uses a common theme.
-
-=== Asciidoctor attributes
-
-The common theme depends on the following attributes to be set right below the title header:
-
-[source,text]
-----
-= My awesome how-to
-:page-permalink: /
-:page-github: vertx-howtos/my-howto
-----
-
-The `page-permalink` attribute ensures that `README.adoc` is rendered as `index.html` rather than `README.adoc`.
-
-The `page-github` attribute must contain the joint GitHub organization and repository so it can properly link to the GitHub repository, provide a direct edition link, and more.
-
-=== Jekyll configuration
-
-The Jekyll configuration shall not have to be tweaked much, here is the basic configuration that we use:
-
-[source,yaml]
-----
-include::_config.yml[]
-----
-
-TIP: When running Jekyll, check the content of the `_site/` folder and adapt the `exclude` items to avoid pushing unnecessary content to the website.
-
-=== Ruby environment
-
-It is strongly recommended to use either https://github.com/rbenv/rbenv[rbenv] or https://rvm.io/[RVM] for your Ruby installation.
-
-You will need https://bundler.io/[Bundler] to install all required dependencies:
-
-----
-$ gem install bundler
-----
-
-You can then let _Bundler_ do the installation work:
-
-----
-$ bundle install
-----
-
-From time to time you may also update dependencies:
-
-----
-$ bundle update
-----
-
-The dependencies are specified in the `Gemfile` file:
-
-[source,ruby]
-----
-include::Gemfile[]
-----
-
-TIP: Keep the `vertx-howtos-jekyll-theme` dependency up-to-date!
-
-=== Running Jekyll
-
-You can run Jekyll with a full auto-reload experience:
-
-----
-$ bundle exec jekyll server --watch --livereload
-----
-
-== How is the website being published?
-
-The content first needs to be rendered by Jekyll, then the resulting web site files are being pushed to the repository `gh-pages` branch.
-GitHub pages then exposes the content of the `gh-pages` branch as the website.
-
-While you could do this manually, we automate the process with Travis-CI that also has a special deployment provider to further simplify the process.
-
-Feel-free to customize the `.travis.yml` configuration to check that your how-to code builds and passes tests, but keep the `deploy` tree close to that one:
-
-[source,yaml]
-----
-include::.travis.yml[]
-----
-
-`$GITHUB_TOKEN` is a Travis-CI secret to pass a GitHub API token so that the CI job can push to the `gh-pages` branch.
-It is configured on Travis-CI by a Vert.x project maintainer.
-
-Note that we only publish on the `master` branch, but pull-requests can still be tested.
-This also means that we are in a model where the `master` branch is the latest stable revision.
-
-== Misc
-
-=== Code style
-
-There is a `.editorconfig` file in this template repository with the 2-space indentation style that we prefer in Vert.x.
-
-In any case, favour readability in samples:
-
-- do not hesitate to use blank lines,
-- do not over-engineer,
-- use explicit short private methods rather than complicated lambdas expressions.
-
-=== Asciidoc style
-
-Asciidoc does not enforce any style.
-
-We recommended that you follow the https://asciidoctor.org/docs/asciidoc-recommended-practices/[Asciidoctor recommended practices], and especially the https://asciidoctor.org/docs/asciidoc-recommended-practices/#one-sentence-per-line["One sentence per line"] rule.
+- https://vertx.io/docs/vertx-web/java/[Vert.x web APIs]
+- https://kubernetes.io/docs/setup/minikube/[Minikube]
+- https://github.com/knative/docs[Knative documentation]
+- https://github.com/knative/serving[Knative serving]
