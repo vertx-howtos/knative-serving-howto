@@ -1,16 +1,16 @@
-= Deploying a Vert.x function with Knative
+= Deploying a Knative service powered by Vert.x
 :author: Julien Ponge <julien.ponge@gmail.com>
 :page-permalink: /
 :page-github: vertx-howtos/knative-serving-howto
 
-This how-to shows you how to deploy a Vert.x-based _function_ served by https://cloud.google.com/knative/[Knative].
+This how-to shows you how to deploy a Vert.x-based https://cloud.google.com/knative/[Knative] service.
 
 == What you will build
 
-- You will write a function that accepts Asciidoc text, and produces a HTML rendering with Asciidoctor.
-- This function will be written in Kotlin.
+- You will write a service that accepts Asciidoc text, and produces a HTML rendering with Asciidoctor.
+- This service will be written in Kotlin.
 - A container image with the function will be created with https://github.com/GoogleContainerTools/jib[Jib].
-- This function will be deployed with Knative/serving.
+- This service will be deployed with Knative/serving.
 
 == What you need
 
@@ -20,18 +20,18 @@ This how-to shows you how to deploy a Vert.x-based _function_ served by https://
 - Docker
 - A working Kubernetes cluster with https://github.com/knative/serving[Knative/serving].
 
-== What is a Knative function and why is Vert.x a good match?
+== What is a Knative service and why is Vert.x a good match?
 
 Knative starts container images (3 by default) to respond to requests, and scales down to 0 after some delay without traffic.
 A "function" served by Knative/serving is simply a HTTP service written in any language, and packaged as a container image.
 
-Vert.x is ideal for writing Knative functions on the JVM, because:
+Vert.x is ideal for writing Knative services on the JVM, because:
 
 . Vert.x applications start very fast since there is no magic happening at run time,
 . GraalVM can be used compilation to further reduce the startup and memory footprint (out of the scope of this how-to),
 . Vert.x applications are resource-efficient and remain responsive even under heavy load,
 . Vert.x offers a large ecosystem of reactive clients to other middlewares (databases, messaging, etc),
-. even a _main_ method suffices to bootstrap a Vert.x application!
+. a _main_ method / function suffices to bootstrap a Vert.x application!
 
 == Create a project
 
@@ -61,9 +61,9 @@ include::pom.xml[]
 <2> Allows running with `mvn exec:java`.
 <3> Jib configuration to produce an image.
 
-== Writing the function
+== Writing the service
 
-The function exposes a HTTP server.
+The service exposes a HTTP server.
 Asciidoc is passed to the function through HTTP POST requests.
 For each request, Asciidoctor is used to perform the conversion to HTML:
 
@@ -80,7 +80,7 @@ We could have written the Vert.x code as a verticle, but doing so in the `main` 
 
 == Running the function locally
 
-We can easily test that the function works:
+We can easily test that the service works:
 
 . from your IDE, run the `main` function, or
 . with Gradle: `./gradlew run` (Linux, macOS) or `gradle run` (Windows).
@@ -124,7 +124,7 @@ dev.local/jponge/knative-vertx-asciidoctor    v1        4ca7aafd590c
 
 == Describing a service for Knative
 
-Here is the descriptor in file `service.yaml` for exposing our function with Knative/serving:
+Here is the descriptor in file `service.yaml` for exposing our service with Knative/serving:
 
 [source,yaml]
 ----
@@ -141,9 +141,9 @@ NAME                        DOMAIN                                          LATE
 knative-vertx-asciidoctor   knative-vertx-asciidoctor.default.example.com   knative-vertx-asciidoctor-jc4sw   knative-vertx-asciidoctor-pztr6   Unknown
 ----
 
-== Testing the function exposed by Knative
+== Testing the service exposed by Knative
 
-In our case the function is exposed under the `knative-vertx-asciidoctor.default.example.com` domain.
+In our case the service is exposed under the `knative-vertx-asciidoctor.default.example.com` domain.
 It is available via the `istio-ingressgateway` service (check all available services with `kubectl get services --all-namespaces`).
 
 The Knative documentation has https://github.com/knative/docs/blob/master/install/getting-started-knative-app.md[instructions to figure out what IP, ports and host names you should use].
@@ -155,7 +155,7 @@ $ http POST $(minikube ip):31380 'Host:knative-vertx-asciidoctor.default.example
 ----
 
 You should see HTML in the response.
-You should also see pods for your function:
+You should also see pods for your service:
 
 ----
 $ kubectl get pods
@@ -174,9 +174,9 @@ Issue a new request, and see that new pods have been created again.
 
 == Summary
 
-- We wrote a function with Vert.x and Kotlin that renders Asciidoc text to HTML.
+- We wrote a Knative service with Vert.x and Kotlin that renders Asciidoc text to HTML.
 - We built a container image.
-- We deployed this function with Knative/serving.
+- We deployed this service with Knative/serving.
 
 == See also
 
