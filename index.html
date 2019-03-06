@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>Deploying a Vert.x function with Knative | Eclipse Vert.x how-to</title>
+  <title>Deploying a Knative service powered by Vert.x | Eclipse Vert.x how-to</title>
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr"
     crossorigin="anonymous">
@@ -39,11 +39,11 @@
   <div class="container">
     <div class="row">
       <div class="col">
-        <h1>Deploying a Vert.x function with Knative</h1>
+        <h1>Deploying a Knative service powered by Vert.x</h1>
         <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>This how-to shows you how to deploy a Vert.x-based <em>function</em> served by <a href="https://cloud.google.com/knative/">Knative</a>.</p>
+<p>This how-to shows you how to deploy a Vert.x-based <a href="https://cloud.google.com/knative/">Knative</a> service.</p>
 </div>
 </div>
 </div>
@@ -53,16 +53,16 @@
 <div class="ulist">
 <ul>
 <li>
-<p>You will write a function that accepts Asciidoc text, and produces a HTML rendering with Asciidoctor.</p>
+<p>You will write a service that accepts Asciidoc text, and produces a HTML rendering with Asciidoctor.</p>
 </li>
 <li>
-<p>This function will be written in Kotlin.</p>
+<p>This service will be written in Kotlin.</p>
 </li>
 <li>
 <p>A container image with the function will be created with <a href="https://github.com/GoogleContainerTools/jib">Jib</a>.</p>
 </li>
 <li>
-<p>This function will be deployed with Knative/serving.</p>
+<p>This service will be deployed with Knative/serving.</p>
 </li>
 </ul>
 </div>
@@ -93,14 +93,14 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="what-is-a-knative-function-and-why-is-vert-x-a-good-match">What is a Knative function and why is Vert.x a good match?</h2>
+<h2 id="what-is-a-knative-service-and-why-is-vert-x-a-good-match">What is a Knative service and why is Vert.x a good match?</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Knative starts container images (3 by default) to respond to requests, and scales down to 0 after some delay without traffic.
 A "function" served by Knative/serving is simply a HTTP service written in any language, and packaged as a container image.</p>
 </div>
 <div class="paragraph">
-<p>Vert.x is ideal for writing Knative functions on the JVM, because:</p>
+<p>Vert.x is ideal for writing Knative services on the JVM, because:</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -117,7 +117,7 @@ A "function" served by Knative/serving is simply a HTTP service written in any l
 <p>Vert.x offers a large ecosystem of reactive clients to other middlewares (databases, messaging, etc),</p>
 </li>
 <li>
-<p>even a <em>main</em> method suffices to bootstrap a Vert.x application!</p>
+<p>a <em>main</em> method / function suffices to bootstrap a Vert.x application!</p>
 </li>
 </ol>
 </div>
@@ -315,10 +315,10 @@ A "function" served by Knative/serving is simply a HTTP service written in any l
 </div>
 </div>
 <div class="sect1">
-<h2 id="writing-the-function">Writing the function</h2>
+<h2 id="writing-the-service">Writing the service</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The function exposes a HTTP server.
+<p>The service exposes a HTTP server.
 Asciidoc is passed to the function through HTTP POST requests.
 For each request, Asciidoctor is used to perform the conversion to HTML:</p>
 </div>
@@ -382,7 +382,7 @@ For each request, Asciidoctor is used to perform the conversion to HTML:</p>
 <h2 id="running-the-function-locally">Running the function locally</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>We can easily test that the function works:</p>
+<p>We can easily test that the service works:</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -454,7 +454,7 @@ dev.local/jponge/knative-vertx-asciidoctor    v1        4ca7aafd590c
 <h2 id="describing-a-service-for-knative">Describing a service for Knative</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Here is the descriptor in file <code>service.yaml</code> for exposing our function with Knative/serving:</p>
+<p>Here is the descriptor in file <code>service.yaml</code> for exposing our service with Knative/serving:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -487,10 +487,10 @@ knative-vertx-asciidoctor   knative-vertx-asciidoctor.default.example.com   knat
 </div>
 </div>
 <div class="sect1">
-<h2 id="testing-the-function-exposed-by-knative">Testing the function exposed by Knative</h2>
+<h2 id="testing-the-service-exposed-by-knative">Testing the service exposed by Knative</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>In our case the function is exposed under the <code>knative-vertx-asciidoctor.default.example.com</code> domain.
+<p>In our case the service is exposed under the <code>knative-vertx-asciidoctor.default.example.com</code> domain.
 It is available via the <code>istio-ingressgateway</code> service (check all available services with <code>kubectl get services --all-namespaces</code>).</p>
 </div>
 <div class="paragraph">
@@ -506,7 +506,7 @@ It is available via the <code>istio-ingressgateway</code> service (check all ava
 </div>
 <div class="paragraph">
 <p>You should see HTML in the response.
-You should also see pods for your function:</p>
+You should also see pods for your service:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -535,13 +535,13 @@ No resources found.</pre>
 <div class="ulist">
 <ul>
 <li>
-<p>We wrote a function with Vert.x and Kotlin that renders Asciidoc text to HTML.</p>
+<p>We wrote a Knative service with Vert.x and Kotlin that renders Asciidoc text to HTML.</p>
 </li>
 <li>
 <p>We built a container image.</p>
 </li>
 <li>
-<p>We deployed this function with Knative/serving.</p>
+<p>We deployed this service with Knative/serving.</p>
 </li>
 </ul>
 </div>
@@ -573,7 +573,7 @@ No resources found.</pre>
     <div class="row">
       <div class="col">
         <hr>
-        <p><small>Last published: 2019-03-06 08:57:19 +0000.</small></p>
+        <p><small>Last published: 2019-03-06 10:11:26 +0000.</small></p>
       </div>
     </div>
   </div>
