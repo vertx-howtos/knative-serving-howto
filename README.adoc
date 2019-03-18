@@ -41,7 +41,7 @@ The code of this project contains Maven and Gradle build files that are function
 
 Here is the content of the `build.gradle.kts` file that you should be using:
 
-[source,kotlin]
+[source,kotlin,role="collapsed"]
 ----
 include::build.gradle.kts[]
 ----
@@ -53,7 +53,7 @@ include::build.gradle.kts[]
 
 Here is the content of the `pom.xml` file that you should be using:
 
-[source,xml]
+[source,xml,role="collapsed"]
 ----
 include::pom.xml[]
 ----
