@@ -144,42 +144,42 @@ A "function" served by Knative/serving is simply a HTTP service written in any l
 <div class="content">
 <pre class="rouge highlight" style="background-color: #f8f8f8"><code data-lang="kotlin"><span style="color: #000000;font-weight: bold">import</span> <span style="color: #555555">org.jetbrains.kotlin.gradle.tasks.KotlinCompile</span>
 
-<span style="background-color: #f8f8f8">plugins</span> <span style="background-color: #f8f8f8">{</span>
-  <span style="background-color: #f8f8f8">id</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"org.jetbrains.kotlin.jvm"</span><span style="background-color: #f8f8f8">).</span><span style="background-color: #f8f8f8">version</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"1.3.20"</span><span style="background-color: #f8f8f8">)</span>
-  <span style="background-color: #f8f8f8">id</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"com.google.cloud.tools.jib"</span><span style="background-color: #f8f8f8">)</span> <span style="background-color: #f8f8f8">version</span> <span style="color: #d14">"1.0.1"</span>
+<span style="color: #990000;font-weight: bold">plugins</span> <span style="background-color: #f8f8f8">{</span>
+  <span style="color: #990000;font-weight: bold">id</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"org.jetbrains.kotlin.jvm"</span><span style="background-color: #f8f8f8">).</span><span style="color: #990000;font-weight: bold">version</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"1.3.20"</span><span style="background-color: #f8f8f8">)</span>
+  <span style="color: #990000;font-weight: bold">id</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"com.google.cloud.tools.jib"</span><span style="background-color: #f8f8f8">)</span> <span style="background-color: #f8f8f8">version</span> <span style="color: #d14">"1.0.1"</span>
   <span style="background-color: #f8f8f8">application</span>
 <span style="background-color: #f8f8f8">}</span>
 
-<span style="background-color: #f8f8f8">repositories</span> <span style="background-color: #f8f8f8">{</span>
-  <span style="background-color: #f8f8f8">jcenter</span><span style="background-color: #f8f8f8">()</span>
+<span style="color: #990000;font-weight: bold">repositories</span> <span style="background-color: #f8f8f8">{</span>
+  <span style="color: #990000;font-weight: bold">jcenter</span><span style="background-color: #f8f8f8">()</span>
 <span style="background-color: #f8f8f8">}</span>
 
-<span style="background-color: #f8f8f8">dependencies</span> <span style="background-color: #f8f8f8">{</span>  // <b class="conum">(1)</b>
-  <span style="background-color: #f8f8f8">implementation</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"org.jetbrains.kotlin:kotlin-stdlib-jdk8"</span><span style="background-color: #f8f8f8">)</span>
-  <span style="background-color: #f8f8f8">implementation</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"io.vertx:vertx-web:3.6.3"</span><span style="background-color: #f8f8f8">)</span>
-  <span style="background-color: #f8f8f8">implementation</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"org.asciidoctor:asciidoctorj:1.5.6"</span><span style="background-color: #f8f8f8">)</span>
+<span style="color: #990000;font-weight: bold">dependencies</span> <span style="background-color: #f8f8f8">{</span>  // <b class="conum">(1)</b>
+  <span style="color: #990000;font-weight: bold">implementation</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"org.jetbrains.kotlin:kotlin-stdlib-jdk8"</span><span style="background-color: #f8f8f8">)</span>
+  <span style="color: #990000;font-weight: bold">implementation</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"io.vertx:vertx-web:3.6.3"</span><span style="background-color: #f8f8f8">)</span>
+  <span style="color: #990000;font-weight: bold">implementation</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"org.asciidoctor:asciidoctorj:1.5.6"</span><span style="background-color: #f8f8f8">)</span>
 <span style="background-color: #f8f8f8">}</span>
 
-<span style="background-color: #f8f8f8">application</span> <span style="background-color: #f8f8f8">{</span>  // <b class="conum">(2)</b>
+<span style="color: #990000;font-weight: bold">application</span> <span style="background-color: #f8f8f8">{</span>  // <b class="conum">(2)</b>
   <span style="background-color: #f8f8f8">mainClassName</span> <span style="background-color: #f8f8f8">=</span> <span style="color: #d14">"io.vertx.howtos.knative.serving.AppKt"</span>
 <span style="background-color: #f8f8f8">}</span>
 
-<span style="background-color: #f8f8f8">tasks</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">withType</span><span style="background-color: #f8f8f8">&lt;</span><span style="background-color: #f8f8f8">KotlinCompile</span><span style="background-color: #f8f8f8">&gt;</span> <span style="background-color: #f8f8f8">{</span>
+<span style="background-color: #f8f8f8">tasks</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">withType</span><span style="background-color: #f8f8f8">&lt;</span><span style="color: #445588;font-weight: bold">KotlinCompile</span><span style="background-color: #f8f8f8">&gt;</span> <span style="background-color: #f8f8f8">{</span>
   <span style="background-color: #f8f8f8">kotlinOptions</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">jvmTarget</span> <span style="background-color: #f8f8f8">=</span> <span style="color: #d14">"1.8"</span>
 <span style="background-color: #f8f8f8">}</span>
 
-<span style="background-color: #f8f8f8">jib</span> <span style="background-color: #f8f8f8">{</span>  // <b class="conum">(3)</b>
-  <span style="background-color: #f8f8f8">to</span> <span style="background-color: #f8f8f8">{</span>
+<span style="color: #990000;font-weight: bold">jib</span> <span style="background-color: #f8f8f8">{</span>  // <b class="conum">(3)</b>
+  <span style="color: #990000;font-weight: bold">to</span> <span style="background-color: #f8f8f8">{</span>
     <span style="background-color: #f8f8f8">image</span> <span style="background-color: #f8f8f8">=</span> <span style="color: #d14">"dev.local/jponge/knative-vertx-asciidoctor"</span>
-    <span style="background-color: #f8f8f8">tags</span> <span style="background-color: #f8f8f8">=</span> <span style="background-color: #f8f8f8">setOf</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"v1"</span><span style="background-color: #f8f8f8">)</span>
+    <span style="background-color: #f8f8f8">tags</span> <span style="background-color: #f8f8f8">=</span> <span style="color: #990000;font-weight: bold">setOf</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"v1"</span><span style="background-color: #f8f8f8">)</span>
   <span style="background-color: #f8f8f8">}</span>
-  <span style="background-color: #f8f8f8">container</span> <span style="background-color: #f8f8f8">{</span>
+  <span style="color: #990000;font-weight: bold">container</span> <span style="background-color: #f8f8f8">{</span>
     <span style="background-color: #f8f8f8">mainClass</span> <span style="background-color: #f8f8f8">=</span> <span style="background-color: #f8f8f8">application</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">mainClassName</span>
-    <span style="background-color: #f8f8f8">ports</span> <span style="background-color: #f8f8f8">=</span> <span style="background-color: #f8f8f8">listOf</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"8080"</span><span style="background-color: #f8f8f8">)</span>
+    <span style="background-color: #f8f8f8">ports</span> <span style="background-color: #f8f8f8">=</span> <span style="color: #990000;font-weight: bold">listOf</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"8080"</span><span style="background-color: #f8f8f8">)</span>
   <span style="background-color: #f8f8f8">}</span>
 <span style="background-color: #f8f8f8">}</span>
 
-<span style="background-color: #f8f8f8">tasks</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">wrapper</span> <span style="background-color: #f8f8f8">{</span>
+<span style="background-color: #f8f8f8">tasks</span><span style="background-color: #f8f8f8">.</span><span style="color: #990000;font-weight: bold">wrapper</span> <span style="background-color: #f8f8f8">{</span>
   <span style="background-color: #f8f8f8">gradleVersion</span> <span style="background-color: #f8f8f8">=</span> <span style="color: #d14">"5.2.1"</span>
 <span style="background-color: #f8f8f8">}</span></code></pre>
 </div>
@@ -340,26 +340,26 @@ For each request, Asciidoctor is used to perform the conversion to HTML:</p>
 <span style="color: #000000;font-weight: bold">import</span> <span style="color: #555555">org.asciidoctor.SafeMode</span>
 
 <span style="color: #000000;font-weight: bold">fun</span> <span style="color: #990000;font-weight: bold">main</span><span style="background-color: #f8f8f8">()</span> <span style="background-color: #f8f8f8">{</span>
-  <span style="color: #000000;font-weight: bold">val</span> <span style="background-color: #f8f8f8">vertx</span> <span style="background-color: #f8f8f8">=</span> <span style="background-color: #f8f8f8">Vertx</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">vertx</span><span style="background-color: #f8f8f8">()</span> // <b class="conum">(1)</b>
+  <span style="color: #000000;font-weight: bold">val</span> <span style="background-color: #f8f8f8">vertx</span> <span style="background-color: #f8f8f8">=</span> <span style="color: #445588;font-weight: bold">Vertx</span><span style="background-color: #f8f8f8">.</span><span style="color: #990000;font-weight: bold">vertx</span><span style="background-color: #f8f8f8">()</span> // <b class="conum">(1)</b>
 
-  <span style="color: #000000;font-weight: bold">val</span> <span style="background-color: #f8f8f8">asciidoctor</span> <span style="background-color: #f8f8f8">=</span> <span style="background-color: #f8f8f8">Asciidoctor</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">Factory</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">create</span><span style="background-color: #f8f8f8">()</span>  // <b class="conum">(2)</b>
-  <span style="color: #000000;font-weight: bold">val</span> <span style="background-color: #f8f8f8">options</span> <span style="background-color: #f8f8f8">=</span> <span style="background-color: #f8f8f8">OptionsBuilder</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">options</span><span style="background-color: #f8f8f8">()</span>
-    <span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">safe</span><span style="background-color: #f8f8f8">(</span><span style="background-color: #f8f8f8">SafeMode</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">SAFE</span><span style="background-color: #f8f8f8">)</span>
-    <span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">backend</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"html5"</span><span style="background-color: #f8f8f8">)</span>
-    <span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">headerFooter</span><span style="background-color: #f8f8f8">(</span><span style="color: #000000;font-weight: bold">true</span><span style="background-color: #f8f8f8">)</span>
+  <span style="color: #000000;font-weight: bold">val</span> <span style="background-color: #f8f8f8">asciidoctor</span> <span style="background-color: #f8f8f8">=</span> <span style="color: #445588;font-weight: bold">Asciidoctor</span><span style="background-color: #f8f8f8">.</span><span style="color: #445588;font-weight: bold">Factory</span><span style="background-color: #f8f8f8">.</span><span style="color: #990000;font-weight: bold">create</span><span style="background-color: #f8f8f8">()</span>  // <b class="conum">(2)</b>
+  <span style="color: #000000;font-weight: bold">val</span> <span style="background-color: #f8f8f8">options</span> <span style="background-color: #f8f8f8">=</span> <span style="color: #445588;font-weight: bold">OptionsBuilder</span><span style="background-color: #f8f8f8">.</span><span style="color: #990000;font-weight: bold">options</span><span style="background-color: #f8f8f8">()</span>
+    <span style="background-color: #f8f8f8">.</span><span style="color: #990000;font-weight: bold">safe</span><span style="background-color: #f8f8f8">(</span><span style="color: #445588;font-weight: bold">SafeMode</span><span style="background-color: #f8f8f8">.</span><span style="color: #445588;font-weight: bold">SAFE</span><span style="background-color: #f8f8f8">)</span>
+    <span style="background-color: #f8f8f8">.</span><span style="color: #990000;font-weight: bold">backend</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"html5"</span><span style="background-color: #f8f8f8">)</span>
+    <span style="background-color: #f8f8f8">.</span><span style="color: #990000;font-weight: bold">headerFooter</span><span style="background-color: #f8f8f8">(</span><span style="color: #000000;font-weight: bold">true</span><span style="background-color: #f8f8f8">)</span>
 
-  <span style="color: #000000;font-weight: bold">val</span> <span style="background-color: #f8f8f8">router</span> <span style="background-color: #f8f8f8">=</span> <span style="background-color: #f8f8f8">Router</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">router</span><span style="background-color: #f8f8f8">(</span><span style="background-color: #f8f8f8">vertx</span><span style="background-color: #f8f8f8">)</span>
-  <span style="background-color: #f8f8f8">router</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">route</span><span style="background-color: #f8f8f8">().</span><span style="background-color: #f8f8f8">handler</span><span style="background-color: #f8f8f8">(</span><span style="background-color: #f8f8f8">BodyHandler</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">create</span><span style="background-color: #f8f8f8">())</span>  // <b class="conum">(3)</b>
+  <span style="color: #000000;font-weight: bold">val</span> <span style="background-color: #f8f8f8">router</span> <span style="background-color: #f8f8f8">=</span> <span style="color: #445588;font-weight: bold">Router</span><span style="background-color: #f8f8f8">.</span><span style="color: #990000;font-weight: bold">router</span><span style="background-color: #f8f8f8">(</span><span style="background-color: #f8f8f8">vertx</span><span style="background-color: #f8f8f8">)</span>
+  <span style="background-color: #f8f8f8">router</span><span style="background-color: #f8f8f8">.</span><span style="color: #990000;font-weight: bold">route</span><span style="background-color: #f8f8f8">().</span><span style="color: #990000;font-weight: bold">handler</span><span style="background-color: #f8f8f8">(</span><span style="color: #445588;font-weight: bold">BodyHandler</span><span style="background-color: #f8f8f8">.</span><span style="color: #990000;font-weight: bold">create</span><span style="background-color: #f8f8f8">())</span>  // <b class="conum">(3)</b>
 
-  <span style="background-color: #f8f8f8">router</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">post</span><span style="background-color: #f8f8f8">().</span><span style="background-color: #f8f8f8">handler</span> <span style="background-color: #f8f8f8">{</span> <span style="background-color: #f8f8f8">ctx</span> <span style="background-color: #f8f8f8">-&gt;</span>  // <b class="conum">(4)</b>
-    <span style="background-color: #f8f8f8">ctx</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">response</span><span style="background-color: #f8f8f8">()</span>
-      <span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">putHeader</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"Content-Type"</span><span style="background-color: #f8f8f8">,</span> <span style="color: #d14">"text/html"</span><span style="background-color: #f8f8f8">)</span>
-      <span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">end</span><span style="background-color: #f8f8f8">(</span><span style="background-color: #f8f8f8">asciidoctor</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">render</span><span style="background-color: #f8f8f8">(</span><span style="background-color: #f8f8f8">ctx</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">bodyAsString</span><span style="background-color: #f8f8f8">,</span> <span style="background-color: #f8f8f8">options</span><span style="background-color: #f8f8f8">))</span>
+  <span style="background-color: #f8f8f8">router</span><span style="background-color: #f8f8f8">.</span><span style="color: #990000;font-weight: bold">post</span><span style="background-color: #f8f8f8">().</span><span style="color: #990000;font-weight: bold">handler</span> <span style="background-color: #f8f8f8">{</span> <span style="background-color: #f8f8f8">ctx</span> <span style="background-color: #f8f8f8">-&gt;</span>  // <b class="conum">(4)</b>
+    <span style="background-color: #f8f8f8">ctx</span><span style="background-color: #f8f8f8">.</span><span style="color: #990000;font-weight: bold">response</span><span style="background-color: #f8f8f8">()</span>
+      <span style="background-color: #f8f8f8">.</span><span style="color: #990000;font-weight: bold">putHeader</span><span style="background-color: #f8f8f8">(</span><span style="color: #d14">"Content-Type"</span><span style="background-color: #f8f8f8">,</span> <span style="color: #d14">"text/html"</span><span style="background-color: #f8f8f8">)</span>
+      <span style="background-color: #f8f8f8">.</span><span style="color: #990000;font-weight: bold">end</span><span style="background-color: #f8f8f8">(</span><span style="background-color: #f8f8f8">asciidoctor</span><span style="background-color: #f8f8f8">.</span><span style="color: #990000;font-weight: bold">render</span><span style="background-color: #f8f8f8">(</span><span style="background-color: #f8f8f8">ctx</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">bodyAsString</span><span style="background-color: #f8f8f8">,</span> <span style="background-color: #f8f8f8">options</span><span style="background-color: #f8f8f8">))</span>
   <span style="background-color: #f8f8f8">}</span>
 
-  <span style="background-color: #f8f8f8">vertx</span><span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">createHttpServer</span><span style="background-color: #f8f8f8">()</span>
-    <span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">requestHandler</span><span style="background-color: #f8f8f8">(</span><span style="background-color: #f8f8f8">router</span><span style="background-color: #f8f8f8">)</span>
-    <span style="background-color: #f8f8f8">.</span><span style="background-color: #f8f8f8">listen</span><span style="background-color: #f8f8f8">(</span><span style="color: #009999">8080</span><span style="background-color: #f8f8f8">)</span>
+  <span style="background-color: #f8f8f8">vertx</span><span style="background-color: #f8f8f8">.</span><span style="color: #990000;font-weight: bold">createHttpServer</span><span style="background-color: #f8f8f8">()</span>
+    <span style="background-color: #f8f8f8">.</span><span style="color: #990000;font-weight: bold">requestHandler</span><span style="background-color: #f8f8f8">(</span><span style="background-color: #f8f8f8">router</span><span style="background-color: #f8f8f8">)</span>
+    <span style="background-color: #f8f8f8">.</span><span style="color: #990000;font-weight: bold">listen</span><span style="background-color: #f8f8f8">(</span><span style="color: #009999">8080</span><span style="background-color: #f8f8f8">)</span>
 <span style="background-color: #f8f8f8">}</span></code></pre>
 </div>
 </div>
@@ -677,7 +677,7 @@ No resources found.</pre>
   <div class="row">
     <div class="col">
       <hr>
-      <p><small>Last published: 2019-09-17 14:27:22 +0000.</small></p>
+      <p><small>Last published: 2019-09-18 14:27:57 +0000.</small></p>
     </div>
   </div>
 </div>
