@@ -1,8 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  id("org.jetbrains.kotlin.jvm").version("1.3.20")
-  id("com.google.cloud.tools.jib") version "1.0.1"
+  id("org.jetbrains.kotlin.jvm").version("1.3.50")
+  id("com.google.cloud.tools.jib") version "1.7.0"
   application
 }
 
@@ -12,7 +12,7 @@ repositories {
 
 dependencies {  // <1>
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-  implementation("io.vertx:vertx-web:3.6.3")
+  implementation("io.vertx:vertx-web:3.8.3")
   implementation("org.asciidoctor:asciidoctorj:1.5.6")
 }
 
@@ -36,5 +36,5 @@ jib {  // <3>
 }
 
 tasks.wrapper {
-  gradleVersion = "5.2.1"
+  gradleVersion = "5.6.3"
 }
