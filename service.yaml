@@ -4,9 +4,7 @@ metadata:
   name: knative-vertx-asciidoctor
   namespace: default
 spec:
-  runLatest:
-    configuration:
-      revisionTemplate:
-        spec:
-          container:
-            image: dev.local/jponge/knative-vertx-asciidoctor:v1
+  template:
+    spec:
+      containers:
+        - image: dev.local/jponge/knative-vertx-asciidoctor:v1
