@@ -470,12 +470,10 @@ dev.local/jponge/knative-vertx-asciidoctor    v1        4ca7aafd590c
   <span style="color: #008080">name</span><span style="background-color: #f8f8f8">:</span> <span style="color: #d14">knative-vertx-asciidoctor</span>
   <span style="color: #008080">namespace</span><span style="background-color: #f8f8f8">:</span> <span style="color: #d14">default</span>
 <span style="color: #008080">spec</span><span style="background-color: #f8f8f8">:</span>
-  <span style="color: #008080">runLatest</span><span style="background-color: #f8f8f8">:</span>
-    <span style="color: #008080">configuration</span><span style="background-color: #f8f8f8">:</span>
-      <span style="color: #008080">revisionTemplate</span><span style="background-color: #f8f8f8">:</span>
-        <span style="color: #008080">spec</span><span style="background-color: #f8f8f8">:</span>
-          <span style="color: #008080">container</span><span style="background-color: #f8f8f8">:</span>
-            <span style="color: #008080">image</span><span style="background-color: #f8f8f8">:</span> <span style="color: #d14">dev.local/jponge/knative-vertx-asciidoctor:v1</span></code></pre>
+  <span style="color: #008080">template</span><span style="background-color: #f8f8f8">:</span>
+    <span style="color: #008080">spec</span><span style="background-color: #f8f8f8">:</span>
+      <span style="color: #008080">containers</span><span style="background-color: #f8f8f8">:</span>
+        <span style="background-color: #f8f8f8">-</span> <span style="color: #008080">image</span><span style="background-color: #f8f8f8">:</span> <span style="color: #d14">dev.local/jponge/knative-vertx-asciidoctor:v1</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -677,7 +675,7 @@ No resources found.</pre>
   <div class="row">
     <div class="col">
       <hr>
-      <p><small>Last published: 2019-12-16 15:12:34 +0000.</small></p>
+      <p><small>Last published: 2019-12-16 17:52:11 +0000.</small></p>
     </div>
   </div>
 </div>
