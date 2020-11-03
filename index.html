@@ -223,7 +223,7 @@ A "function" served by Knative/serving is simply a HTTP service written in any l
     <span style="color: #000080">&lt;project.build.sourceEncoding&gt;</span>UTF-8<span style="color: #000080">&lt;/project.build.sourceEncoding&gt;</span>
   <span style="color: #000080">&lt;/properties&gt;</span>
 
-  <span style="color: #000080">&lt;dependencies&gt;</span>  <b class="conum">(1)</b>
+  <span style="color: #000080">&lt;dependencies&gt;</span>  &lt;!--<b class="conum">(1)</b>--&gt;
     <span style="color: #000080">&lt;dependency&gt;</span>
       <span style="color: #000080">&lt;groupId&gt;</span>org.jetbrains.kotlin<span style="color: #000080">&lt;/groupId&gt;</span>
       <span style="color: #000080">&lt;artifactId&gt;</span>kotlin-stdlib<span style="color: #000080">&lt;/artifactId&gt;</span>
@@ -266,7 +266,7 @@ A "function" served by Knative/serving is simply a HTTP service written in any l
         <span style="color: #000080">&lt;/executions&gt;</span>
       <span style="color: #000080">&lt;/plugin&gt;</span>
       <span style="color: #000080">&lt;plugin&gt;</span>
-        <span style="color: #000080">&lt;groupId&gt;</span>org.codehaus.mojo<span style="color: #000080">&lt;/groupId&gt;</span>  <b class="conum">(2)</b>
+        <span style="color: #000080">&lt;groupId&gt;</span>org.codehaus.mojo<span style="color: #000080">&lt;/groupId&gt;</span>  &lt;!--<b class="conum">(2)</b>--&gt;
         <span style="color: #000080">&lt;artifactId&gt;</span>exec-maven-plugin<span style="color: #000080">&lt;/artifactId&gt;</span>
         <span style="color: #000080">&lt;version&gt;</span>1.2.1<span style="color: #000080">&lt;/version&gt;</span>
         <span style="color: #000080">&lt;executions&gt;</span>
@@ -281,7 +281,7 @@ A "function" served by Knative/serving is simply a HTTP service written in any l
         <span style="color: #000080">&lt;/configuration&gt;</span>
       <span style="color: #000080">&lt;/plugin&gt;</span>
       <span style="color: #000080">&lt;plugin&gt;</span>
-        <span style="color: #000080">&lt;groupId&gt;</span>com.google.cloud.tools<span style="color: #000080">&lt;/groupId&gt;</span> <b class="conum">(3)</b>
+        <span style="color: #000080">&lt;groupId&gt;</span>com.google.cloud.tools<span style="color: #000080">&lt;/groupId&gt;</span> &lt;!--<b class="conum">(3)</b>--&gt;
         <span style="color: #000080">&lt;artifactId&gt;</span>jib-maven-plugin<span style="color: #000080">&lt;/artifactId&gt;</span>
         <span style="color: #000080">&lt;version&gt;</span>1.7.0<span style="color: #000080">&lt;/version&gt;</span>
         <span style="color: #000080">&lt;configuration&gt;</span>
@@ -675,7 +675,7 @@ No resources found.</pre>
   <div class="row">
     <div class="col">
       <hr>
-      <p><small>Last published: 2020-11-02 19:45:25 +0000.</small></p>
+      <p><small>Last published: 2020-11-03 19:45:20 +0000.</small></p>
     </div>
   </div>
 </div>
