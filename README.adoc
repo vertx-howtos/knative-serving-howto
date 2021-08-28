@@ -28,7 +28,7 @@ A "function" served by Knative/serving is simply a HTTP service written in any l
 Vert.x is ideal for writing Knative services on the JVM, because:
 
 . Vert.x applications start very fast since there is no magic happening at run time,
-. GraalVM can be used compilation to further reduce the startup and memory footprint (out of the scope of this how-to),
+. GraalVM can be used for compilation to further reduce the startup and memory footprint (out of the scope of this how-to),
 . Vert.x applications are resource-efficient and remain responsive even under heavy load,
 . Vert.x offers a large ecosystem of reactive clients to other middlewares (databases, messaging, etc),
 . a _main_ method / function suffices to bootstrap a Vert.x application!
