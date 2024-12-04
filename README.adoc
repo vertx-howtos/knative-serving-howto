@@ -7,7 +7,7 @@ This how-to shows you how to deploy a Vert.x-based https://cloud.google.com/knat
 
 == What you will build
 
-- You will write a service that accepts Asciidoc text, and produces a HTML rendering with Asciidoctor.
+- You will write a service that accepts Asciidoc text, and produces an HTML rendering with Asciidoctor.
 - This service will be written in Kotlin.
 - A container image with the function will be created with https://github.com/GoogleContainerTools/jib[Jib].
 - This service will be deployed with Knative/serving.
@@ -15,7 +15,7 @@ This how-to shows you how to deploy a Vert.x-based https://cloud.google.com/knat
 == What you need
 
 - A text editor or IDE
-- Java 8 higher
+- Java 11 higher
 - Maven or Gradle
 - Docker
 - A working Kubernetes cluster with https://github.com/knative/serving[Knative/serving].
@@ -23,14 +23,14 @@ This how-to shows you how to deploy a Vert.x-based https://cloud.google.com/knat
 == What is a Knative service and why is Vert.x a good match?
 
 Knative starts container images (3 by default) to respond to requests, and scales down to 0 after some delay without traffic.
-A "function" served by Knative/serving is simply a HTTP service written in any language, and packaged as a container image.
+A "function" served by Knative/serving is simply an HTTP service written in any language, and packaged as a container image.
 
 Vert.x is ideal for writing Knative services on the JVM, because:
 
 . Vert.x applications start very fast since there is no magic happening at run time,
 . GraalVM can be used compilation to further reduce the startup and memory footprint (out of the scope of this how-to),
 . Vert.x applications are resource-efficient and remain responsive even under heavy load,
-. Vert.x offers a large ecosystem of reactive clients to other middlewares (databases, messaging, etc),
+. Vert.x offers a large ecosystem of reactive clients to other middlewares (databases, messaging, etc.),
 . a _main_ method / function suffices to bootstrap a Vert.x application!
 
 == Create a project
@@ -63,7 +63,7 @@ include::pom.xml[]
 
 == Writing the service
 
-The service exposes a HTTP server.
+The service exposes an HTTP server.
 Asciidoc is passed to the function through HTTP POST requests.
 For each request, Asciidoctor is used to perform the conversion to HTML:
 
@@ -73,7 +73,7 @@ include::src/main/kotlin/io/vertx/howtos/knative/serving/App.kt[]
 ----
 <1> We create a Vert.x context.
 <2> We configure a Asciidoctor render.
-<3> We install a HTTP request body handler, so we can just process the whole body rather than manually assemble buffers.
+<3> We install an HTTP request body handler, so we can just process the whole body rather than manually assemble buffers.
 <4> For each request, we render the HTML from the Asciidoc.
 
 We could have written the Vert.x code as a verticle, but doing so in the `main` function reduces the boilerplate code since we would only be deploying a single verticle here anyway.
@@ -86,18 +86,19 @@ We can easily test that the service works:
 . with Gradle: `./gradlew run` (Linux, macOS) or `gradle run` (Windows).
 . with Maven: `mvn compile exec:java`.
 
-You can then upload the content of a Asciidoc file, like the `README.adoc` file at the root of this repository.
+You can then upload the content of an Asciidoc file, like the `README.adoc` file at the root of this repository.
 With https://httpie.org/[HTTPie], you would run a command similar to:
 
+[source,shell]
 ----
-$ http POST :8080/ @README.adoc
+http POST :8080/ @README.adoc
 ----
 
 == Preparing your cluster
 
-You should go to the https://github.com/knative/docs/blob/master/install/[Knative documentation for installation instructions].
+You should go to the https://knative.dev/docs/install/[Knative documentation for installation instructions].
 
-The commands in this how-to assume that you have installed https://github.com/knative/docs/blob/master/install/Knative-with-Minikube.md[Knative with Minikube].
+The commands in this how-to assume that you have installed https://knative.dev/docs/install/quickstart-install/[Knative using quickstart] and Minikube.
 
 == Building your container image
 
@@ -106,15 +107,22 @@ The container image then has to be pushed to your favorite repository.
 
 If you are using Minikube, you can directly build and tag the container image:
 
+[source,shell]
 ----
-$ eval $(minikube docker-env)
-$ ./gradlew jibDockerBuild    # or mvn package jib:dockerBuild
+eval $(minikube docker-env -p knative)
+./gradlew jibDockerBuild    # or mvn package jib:dockerBuild
 ----
 
 Docker should then list the image:
 
+[source,shell]
 ----
-$ docker image ls
+docker image ls
+----
+
+You should see something like:
+
+----
 REPOSITORY                                    TAG       IMAGE ID
 (...)
 dev.local/jponge/knative-vertx-asciidoctor    latest    4ca7aafd590c
@@ -133,40 +141,76 @@ include::service.yaml[]
 
 We can then apply the configuration and check that the service is available:
 
+[source,shell]
 ----
-$ kubectl apply -f service.yaml
+kubectl apply -f service.yaml
+----
+
+You should see something like:
+
+----
 service.serving.knative.dev/knative-vertx-asciidoctor created
-$ kubectl get ksvc
-NAME                        DOMAIN                                          LATESTCREATED                     LATESTREADY                       READY     REASON
-knative-vertx-asciidoctor   knative-vertx-asciidoctor.default.example.com   knative-vertx-asciidoctor-jc4sw   knative-vertx-asciidoctor-pztr6   Unknown
+----
+
+Then:
+
+[source,shell]
+----
+kubectl get ksvc
+----
+
+You should see something like:
+
+----
+NAME                        URL                                                               LATESTCREATED                     LATESTREADY                       READY   REASON
+knative-vertx-asciidoctor   http://knative-vertx-asciidoctor.default.10.101.169.49.sslip.io   knative-vertx-asciidoctor-00001   knative-vertx-asciidoctor-00001   True
 ----
 
 == Testing the service exposed by Knative
 
-In our case the service is exposed under the `knative-vertx-asciidoctor.default.example.com` domain.
-It is available via the `istio-ingressgateway` service (check all available services with `kubectl get services --all-namespaces`).
-
-The Knative documentation has https://github.com/knative/docs/blob/master/install/getting-started-knative-app.md[instructions to figure out what IP, ports and host names you should use].
-
 With Minikube, making a request to the function is similar to:
 
+[source,shell]
 ----
-$ http POST $(minikube ip):31380 'Host:knative-vertx-asciidoctor.default.example.com' @README.adoc
+http POST knative-vertx-asciidoctor.default.10.101.169.49.sslip.io @README.adoc
 ----
 
 You should see HTML in the response.
+
+[NOTE]
+====
+If your system is not able to resolve `sslip.io` names, extract the IP from the URL and try something this:
+
+[source,shell]
+----
+http POST 10.101.169.49 'Host:knative-vertx-asciidoctor.default.10.101.169.49.sslip.io' @README.adoc
+----
+====
+
 You should also see pods for your service:
 
+[source,shell]
 ----
-$ kubectl get pods
+kubectl get pods
+----
+
+You should see something like:
+
+----
 NAME                                                          READY   STATUS    RESTARTS   AGE
 knative-vertx-asciidoctor-mlhwq-deployment-5cc999bdb7-jx2ff   3/3     Running   0          2m5s
 ----
 
 After a while, you can check that the Knative auto-scaler has removed all pods:
 
+[source,shell]
 ----
-$ kubectl get pods
+kubectl get pods
+----
+
+You should see something like:
+
+----
 No resources found.
 ----
 
@@ -182,5 +226,5 @@ Issue a new request, and see that new pods have been created again.
 
 - https://vertx.io/docs/vertx-web/java/[Vert.x web APIs]
 - https://kubernetes.io/docs/setup/minikube/[Minikube]
-- https://github.com/knative/docs[Knative documentation]
-- https://github.com/knative/serving[Knative serving]
+- https://knative.dev/docs/[Knative documentation]
+- https://knative.dev/docs/serving/[Knative serving]
